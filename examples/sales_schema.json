@@ -1,0 +1,48 @@
+{
+  "fields": {
+    "transaction_id": {
+      "type": "Int64",
+      "constraints": [
+        {
+          "type": "nullability",
+          "max_null_count": 0
+        }
+      ]
+    },
+    "amount": {
+      "type": "Float64",
+      "constraints": [
+        {
+          "type": "minimum_value",
+          "min_value": 0.01
+        },
+        {
+          "type": "maximum_value",
+          "max_value": 10000
+        },
+        {
+          "type": "mean",
+          "lower_bound": 50,
+          "upper_bound": 500
+        },
+        {
+          "type": "median",
+          "lower_bound": 40,
+          "upper_bound": 200
+        },
+        {
+          "type": "percentile",
+          "percentile": 0.95,
+          "lower_bound": 100,
+          "upper_bound": 1000
+        },
+        {
+          "type": "percentile",
+          "percentile": 0.05,
+          "lower_bound": 1,
+          "upper_bound": 50
+        }
+      ]
+    }
+  }
+}

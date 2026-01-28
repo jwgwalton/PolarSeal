@@ -1,0 +1,45 @@
+{
+  "fields": {
+    "user_id": {
+      "type": "Int64",
+      "constraints": [
+        {
+          "type": "nullability",
+          "max_null_ratio": 0.0
+        }
+      ]
+    },
+    "email": {
+      "type": "String",
+      "constraints": [
+        {
+          "type": "nullability",
+          "max_null_ratio": 0.05
+        }
+      ]
+    },
+    "age": {
+      "type": "Int64",
+      "constraints": [
+        {
+          "type": "minimum_value",
+          "min_value": 0
+        },
+        {
+          "type": "maximum_value",
+          "max_value": 120
+        },
+        {
+          "type": "mean",
+          "lower_bound": 18,
+          "upper_bound": 65
+        },
+        {
+          "type": "median",
+          "lower_bound": 25,
+          "upper_bound": 50
+        }
+      ]
+    }
+  }
+}
