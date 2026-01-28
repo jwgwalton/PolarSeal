@@ -9,7 +9,7 @@ This repository uses GitHub Actions for continuous integration and deployment.
 **Trigger:** Runs on all pull requests and pushes to `main`
 
 **What it does:**
-- Tests the code across Python versions 3.8, 3.9, 3.10, 3.11, and 3.12
+- Tests the code across Python versions 3.10, 3.11, and 3.12
 - Installs development dependencies
 - Runs pytest with coverage reporting
 
