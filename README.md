@@ -4,12 +4,14 @@ A powerful data validation library built on Polars that goes beyond type checkin
 
 ## Features
 
+- **Field-Based Schema**: Define fields with explicit types and optional constraints
+- **Type Validation**: Automatically validate DataFrame column types against schema
 - **Nullability Constraints**: Control acceptable rates of null values by ratio or count
 - **Value Constraints**: Define minimum and maximum acceptable values
 - **Statistical Constraints**: Validate mean, median, and arbitrary percentiles with upper/lower bounds
 - **Native Polars**: Uses native Polars expressions for high performance
 - **JSON Schema Support**: Define validation schemas in JSON files for easy configuration
-- **Comprehensive Validation Results**: Get detailed reports on constraint violations
+- **ValidationError Exception**: Automatic error raising on validation failure with detailed messages
 
 ## Installation
 
@@ -27,35 +29,41 @@ pip install -e ".[dev]"
 
 ## Quick Start
 
-### Using JSON Schemas
+### Using Field-Based JSON Schemas (Recommended)
 
 Create a schema file (`schema.json`):
 
 ```json
 {
-  "constraints": [
-    {
-      "type": "nullability",
-      "column": "user_id",
-      "max_null_ratio": 0.0
+  "fields": {
+    "user_id": {
+      "type": "Int64",
+      "constraints": [
+        {
+          "type": "nullability",
+          "max_null_ratio": 0.0
+        }
+      ]
     },
-    {
-      "type": "minimum_value",
-      "column": "age",
-      "min_value": 0
-    },
-    {
-      "type": "maximum_value",
-      "column": "age",
-      "max_value": 120
-    },
-    {
-      "type": "mean",
-      "column": "age",
-      "lower_bound": 18,
-      "upper_bound": 65
+    "age": {
+      "type": "Int64",
+      "constraints": [
+        {
+          "type": "minimum_value",
+          "min_value": 0
+        },
+        {
+          "type": "maximum_value",
+          "max_value": 120
+        },
+        {
+          "type": "mean",
+          "lower_bound": 18,
+          "upper_bound": 65
+        }
+      ]
     }
-  ]
+  }
 }
 ```
 
@@ -63,7 +71,7 @@ Validate your DataFrame:
 
 ```python
 import polars as pl
-from polarseal import load_schema, SchemaValidator
+from polarseal import load_schema, ValidationError
 
 # Create your DataFrame
 df = pl.DataFrame({
@@ -72,11 +80,22 @@ df = pl.DataFrame({
 })
 
 # Load schema and validate
-constraints = load_schema("schema.json")
-validator = SchemaValidator(constraints)
-result = validator.validate(df)
+try:
+    validator = load_schema("schema.json")
+    result = validator.validate(df)  # Raises ValidationError on failure
+    print("✓ Validation passed!")
+except ValidationError as e:
+    print(f"✗ Validation failed: {e}")
+```
 
-# Check results
+### Legacy Behavior
+
+If you prefer to get validation results without exceptions:
+
+```python
+validator = load_schema("schema.json")
+result = validator.validate(df, raise_on_error=False)
+
 if result.passed:
     print("✓ Validation passed!")
 else:
@@ -86,10 +105,13 @@ else:
 
 ### Programmatic Constraints
 
+You can also create constraints programmatically with optional type definitions:
+
 ```python
 import polars as pl
 from polarseal import (
     SchemaValidator,
+    ValidationError,
     NullabilityConstraint,
     MaximumValueConstraint,
     MinimumValueConstraint,
@@ -108,12 +130,62 @@ constraints = [
     MeanConstraint(column="temperature", lower_bound=19.0, upper_bound=23.0),
 ]
 
-# Validate
-validator = SchemaValidator(constraints)
-result = validator.validate(df)
+# Optionally specify field types
+field_definitions = {
+    "temperature": "Float64"
+}
 
-print(result.summary())
+# Validate
+validator = SchemaValidator(constraints, field_definitions)
+try:
+    result = validator.validate(df)
+    print("✓ Validation passed!")
+except ValidationError as e:
+    print(f"✗ Validation failed: {e}")
 ```
+
+## Schema Format
+
+### Field-Based Schema (Recommended)
+
+The new field-based schema format allows you to define each field with its type and an optional list of constraints:
+
+```json
+{
+  "fields": {
+    "field_name": {
+      "type": "DataType",
+      "constraints": [
+        // List of constraints (can be empty)
+      ]
+    }
+  }
+}
+```
+
+**Supported Data Types:**
+- Integer types: `Int8`, `Int16`, `Int32`, `Int64`, `UInt8`, `UInt16`, `UInt32`, `UInt64`
+- Float types: `Float32`, `Float64`
+- String types: `String`, `Utf8`
+- Boolean: `Boolean`, `Bool`
+
+**Example with Empty Constraints:**
+```json
+{
+  "fields": {
+    "id": {
+      "type": "Int64",
+      "constraints": []
+    },
+    "name": {
+      "type": "String",
+      "constraints": []
+    }
+  }
+}
+```
+
+This will validate that the DataFrame has the correct columns with the correct types, without any additional constraints.
 
 ## Constraint Types
 
@@ -121,11 +193,10 @@ print(result.summary())
 
 Controls the acceptable rate of null values in a column.
 
-**JSON Schema:**
+**Field-Based JSON Schema:**
 ```json
 {
   "type": "nullability",
-  "column": "column_name",
   "max_null_ratio": 0.1,      // Optional: Max ratio (0.0-1.0)
   "max_null_count": 10        // Optional: Max count
 }
@@ -144,11 +215,10 @@ NullabilityConstraint(
 
 Ensures all values in a column are below or equal to a maximum.
 
-**JSON Schema:**
+**Field-Based JSON Schema:**
 ```json
 {
   "type": "maximum_value",
-  "column": "column_name",
   "max_value": 100
 }
 ```
@@ -162,11 +232,10 @@ MaximumValueConstraint(column="column_name", max_value=100)
 
 Ensures all values in a column are above or equal to a minimum.
 
-**JSON Schema:**
+**Field-Based JSON Schema:**
 ```json
 {
   "type": "minimum_value",
-  "column": "column_name",
   "min_value": 0
 }
 ```
@@ -180,11 +249,10 @@ MinimumValueConstraint(column="column_name", min_value=0)
 
 Validates that the median of a column falls within specified bounds.
 
-**JSON Schema:**
+**Field-Based JSON Schema:**
 ```json
 {
   "type": "median",
-  "column": "column_name",
   "lower_bound": 10,      // Optional
   "upper_bound": 50       // Optional (at least one required)
 }
@@ -203,11 +271,10 @@ MedianConstraint(
 
 Validates that the mean of a column falls within specified bounds.
 
-**JSON Schema:**
+**Field-Based JSON Schema:**
 ```json
 {
   "type": "mean",
-  "column": "column_name",
   "lower_bound": 20,      // Optional
   "upper_bound": 40       // Optional (at least one required)
 }
@@ -226,11 +293,10 @@ MeanConstraint(
 
 Validates that a specific percentile of a column falls within specified bounds.
 
-**JSON Schema:**
+**Field-Based JSON Schema:**
 ```json
 {
   "type": "percentile",
-  "column": "column_name",
   "percentile": 0.95,     // 0.0 to 1.0
   "lower_bound": 80,      // Optional
   "upper_bound": 100      // Optional (at least one required)
@@ -247,12 +313,32 @@ PercentileConstraint(
 )
 ```
 
-## Working with Validation Results
+## Working with ValidationError
 
-The `ValidationResult` object provides multiple ways to inspect validation outcomes:
+By default, PolarSeal raises a `ValidationError` exception when validation fails:
 
 ```python
-result = validator.validate(df)
+from polarseal import load_schema, ValidationError
+
+try:
+    validator = load_schema("schema.json")
+    result = validator.validate(df)
+    print("✓ All validations passed!")
+except ValidationError as e:
+    print(f"✗ Validation failed: {e}")
+    
+    # Access failure details
+    for failure in e.failures:
+        print(f"  Field: {failure['constraint']}")
+        print(f"  Issue: {failure['message']}")
+```
+
+## Working with Validation Results (Legacy)
+
+When using `raise_on_error=False`, the `ValidationResult` object provides multiple ways to inspect validation outcomes:
+
+```python
+result = validator.validate(df, raise_on_error=False)
 
 # Check if validation passed
 if result.passed:
