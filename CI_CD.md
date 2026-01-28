@@ -24,13 +24,17 @@ This repository uses GitHub Actions for continuous integration and deployment.
 ## How to Release a New Version
 
 1. Update the version in `pyproject.toml`
-2. Commit the version change: `git commit -am "Bump version to X.Y.Z"`
+2. Commit and push the version change: 
+   ```bash
+   git commit -am "Bump version to X.Y.Z"
+   git push
+   ```
 3. Create and push a tag: 
    ```bash
    git tag vX.Y.Z
    git push origin vX.Y.Z
    ```
-4. The publish workflow will automatically build and publish to PyPI
+4. The publish workflow will automatically run tests and publish to PyPI
 
 ## Setup Requirements
 
