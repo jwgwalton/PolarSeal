@@ -109,8 +109,8 @@ class TestFieldBasedSchema:
         finally:
             Path(temp_path).unlink()
 
-    def test_schema_without_fields_or_constraints_raises_error(self):
-        """Test that schema without fields or constraints raises error."""
+    def test_schema_without_fields_raises_error(self):
+        """Test that schema without fields key raises error."""
         schema_data = {"other_key": "value"}
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -118,7 +118,7 @@ class TestFieldBasedSchema:
             temp_path = f.name
         
         try:
-            with pytest.raises(ValueError, match="must contain either 'fields' or 'constraints'"):
+            with pytest.raises(ValueError, match="must contain a 'fields' key"):
                 load_schema(temp_path)
         finally:
             Path(temp_path).unlink()
@@ -395,59 +395,3 @@ class TestTypeMatching:
         finally:
             Path(temp_path).unlink()
 
-
-class TestBackwardCompatibility:
-    """Tests for backward compatibility with old schema format."""
-
-    def test_old_format_still_works(self):
-        """Test that old constraint-based format still works."""
-        schema_data = {
-            "constraints": [
-                {
-                    "type": "maximum_value",
-                    "column": "age",
-                    "max_value": 120
-                }
-            ]
-        }
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(schema_data, f)
-            temp_path = f.name
-        
-        try:
-            validator = load_schema(temp_path)
-            assert isinstance(validator, SchemaValidator)
-            assert len(validator.constraints) == 1
-            # Old format doesn't have field definitions
-            assert len(validator.field_definitions) == 0
-        finally:
-            Path(temp_path).unlink()
-
-    def test_old_format_with_valid_data(self):
-        """Test old format validation with valid data."""
-        df = pl.DataFrame({
-            "age": [25, 30, 35]
-        })
-        
-        schema_data = {
-            "constraints": [
-                {
-                    "type": "maximum_value",
-                    "column": "age",
-                    "max_value": 120
-                }
-            ]
-        }
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(schema_data, f)
-            temp_path = f.name
-        
-        try:
-            validator = load_schema(temp_path)
-            # With old format, should still raise on error by default
-            result = validator.validate(df)
-            assert result.passed
-        finally:
-            Path(temp_path).unlink()

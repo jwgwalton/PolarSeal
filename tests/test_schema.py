@@ -24,18 +24,21 @@ class TestSchemaLoading:
     def test_load_schema_from_file(self):
         """Test loading schema from a JSON file."""
         schema_data = {
-            "constraints": [
-                {
-                    "type": "nullability",
-                    "column": "age",
-                    "max_null_ratio": 0.1
-                },
-                {
-                    "type": "maximum_value",
-                    "column": "age",
-                    "max_value": 120
+            "fields": {
+                "age": {
+                    "type": "Int64",
+                    "constraints": [
+                        {
+                            "type": "nullability",
+                            "max_null_ratio": 0.1
+                        },
+                        {
+                            "type": "maximum_value",
+                            "max_value": 120
+                        }
+                    ]
                 }
-            ]
+            }
         }
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -55,9 +58,9 @@ class TestSchemaLoading:
         with pytest.raises(FileNotFoundError):
             load_schema("/nonexistent/schema.json")
 
-    def test_parse_schema_missing_constraints_key(self):
-        """Test parsing schema without constraints or fields key."""
-        with pytest.raises(ValueError, match="must contain either 'fields' or 'constraints'"):
+    def test_parse_schema_missing_fields_key(self):
+        """Test parsing schema without fields key."""
+        with pytest.raises(ValueError, match="must contain a 'fields' key"):
             _parse_schema({"other_key": []})
 
     def test_create_nullability_constraint(self):

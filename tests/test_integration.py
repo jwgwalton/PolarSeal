@@ -24,35 +24,45 @@ class TestIntegrationWithSchemas:
         
         # Define schema
         schema_data = {
-            "constraints": [
-                {
-                    "type": "nullability",
-                    "column": "user_id",
-                    "max_null_ratio": 0.0
+            "fields": {
+                "user_id": {
+                    "type": "Int64",
+                    "constraints": [
+                        {
+                            "type": "nullability",
+                            "max_null_ratio": 0.0
+                        }
+                    ]
                 },
-                {
-                    "type": "minimum_value",
-                    "column": "age",
-                    "min_value": 18
+                "age": {
+                    "type": "Int64",
+                    "constraints": [
+                        {
+                            "type": "minimum_value",
+                            "min_value": 18
+                        },
+                        {
+                            "type": "maximum_value",
+                            "max_value": 100
+                        }
+                    ]
                 },
-                {
-                    "type": "maximum_value",
-                    "column": "age",
-                    "max_value": 100
-                },
-                {
-                    "type": "mean",
-                    "column": "score",
-                    "lower_bound": 80,
-                    "upper_bound": 95
-                },
-                {
-                    "type": "median",
-                    "column": "score",
-                    "lower_bound": 85,
-                    "upper_bound": 93
+                "score": {
+                    "type": "Float64",
+                    "constraints": [
+                        {
+                            "type": "mean",
+                            "lower_bound": 80,
+                            "upper_bound": 95
+                        },
+                        {
+                            "type": "median",
+                            "lower_bound": 85,
+                            "upper_bound": 93
+                        }
+                    ]
                 }
-            ]
+            }
         }
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -79,24 +89,36 @@ class TestIntegrationWithSchemas:
         
         # Define schema
         schema_data = {
-            "constraints": [
-                {
-                    "type": "nullability",
-                    "column": "sale_id",
-                    "max_null_count": 0
+            "fields": {
+                "sale_id": {
+                    "type": "Int64",
+                    "constraints": [
+                        {
+                            "type": "nullability",
+                            "max_null_count": 0
+                        }
+                    ]
                 },
-                {
-                    "type": "minimum_value",
-                    "column": "amount",
-                    "min_value": 0
+                "amount": {
+                    "type": "Float64",
+                    "constraints": [
+                        {
+                            "type": "minimum_value",
+                            "min_value": 0
+                        }
+                    ]
                 },
-                {
-                    "type": "percentile",
-                    "column": "discount",
-                    "percentile": 0.95,
-                    "upper_bound": 0.5
+                "discount": {
+                    "type": "Float64",
+                    "constraints": [
+                        {
+                            "type": "percentile",
+                            "percentile": 0.95,
+                            "upper_bound": 0.5
+                        }
+                    ]
                 }
-            ]
+            }
         }
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -128,28 +150,34 @@ class TestIntegrationWithSchemas:
         
         # Define schema with percentile constraints
         schema_data = {
-            "constraints": [
-                {
-                    "type": "percentile",
-                    "column": "temperature",
-                    "percentile": 0.05,
-                    "lower_bound": 10,
-                    "upper_bound": 25
+            "fields": {
+                "timestamp": {
+                    "type": "Int64",
+                    "constraints": []
                 },
-                {
-                    "type": "percentile",
-                    "column": "temperature",
-                    "percentile": 0.95,
-                    "lower_bound": 25,
-                    "upper_bound": 40
-                },
-                {
-                    "type": "mean",
-                    "column": "temperature",
-                    "lower_bound": 20,
-                    "upper_bound": 30
+                "temperature": {
+                    "type": "Float64",
+                    "constraints": [
+                        {
+                            "type": "percentile",
+                            "percentile": 0.05,
+                            "lower_bound": 10,
+                            "upper_bound": 25
+                        },
+                        {
+                            "type": "percentile",
+                            "percentile": 0.95,
+                            "lower_bound": 25,
+                            "upper_bound": 40
+                        },
+                        {
+                            "type": "mean",
+                            "lower_bound": 20,
+                            "upper_bound": 30
+                        }
+                    ]
                 }
-            ]
+            }
         }
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -176,51 +204,60 @@ class TestIntegrationWithSchemas:
         })
         
         schema_data = {
-            "constraints": [
-                # ID constraints
-                {
-                    "type": "nullability",
-                    "column": "id",
-                    "max_null_ratio": 0.0
+            "fields": {
+                "id": {
+                    "type": "Int64",
+                    "constraints": [
+                        {
+                            "type": "nullability",
+                            "max_null_ratio": 0.0
+                        }
+                    ]
                 },
-                # Value A constraints
-                {
-                    "type": "minimum_value",
-                    "column": "value_a",
-                    "min_value": 0
+                "value_a": {
+                    "type": "Int64",
+                    "constraints": [
+                        {
+                            "type": "minimum_value",
+                            "min_value": 0
+                        },
+                        {
+                            "type": "maximum_value",
+                            "max_value": 100
+                        },
+                        {
+                            "type": "median",
+                            "lower_bound": 40,
+                            "upper_bound": 60
+                        }
+                    ]
                 },
-                {
-                    "type": "maximum_value",
-                    "column": "value_a",
-                    "max_value": 100
+                "value_b": {
+                    "type": "Float64",
+                    "constraints": [
+                        {
+                            "type": "mean",
+                            "lower_bound": 8,
+                            "upper_bound": 12
+                        },
+                        {
+                            "type": "percentile",
+                            "percentile": 0.25,
+                            "lower_bound": 5,
+                            "upper_bound": 8
+                        }
+                    ]
                 },
-                {
-                    "type": "median",
-                    "column": "value_a",
-                    "lower_bound": 40,
-                    "upper_bound": 60
-                },
-                # Value B constraints
-                {
-                    "type": "mean",
-                    "column": "value_b",
-                    "lower_bound": 8,
-                    "upper_bound": 12
-                },
-                {
-                    "type": "percentile",
-                    "column": "value_b",
-                    "percentile": 0.25,
-                    "lower_bound": 5,
-                    "upper_bound": 8
-                },
-                # Category constraints
-                {
-                    "type": "nullability",
-                    "column": "category",
-                    "max_null_ratio": 0.2
+                "category": {
+                    "type": "String",
+                    "constraints": [
+                        {
+                            "type": "nullability",
+                            "max_null_ratio": 0.2
+                        }
+                    ]
                 }
-            ]
+            }
         }
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:

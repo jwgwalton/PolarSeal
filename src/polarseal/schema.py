@@ -52,19 +52,10 @@ def _parse_schema(schema_data: Dict) -> SchemaValidator:
     Raises:
         ValueError: If the schema is invalid.
     """
-    # Support both old and new formats
-    if "fields" in schema_data:
-        # New format: field-based schema
-        return _parse_field_based_schema(schema_data)
-    elif "constraints" in schema_data:
-        # Old format: flat constraint list (for backward compatibility)
-        constraints = []
-        for constraint_def in schema_data["constraints"]:
-            constraint = _create_constraint(constraint_def)
-            constraints.append(constraint)
-        return SchemaValidator(constraints)
-    else:
-        raise ValueError("Schema must contain either 'fields' or 'constraints' key")
+    if "fields" not in schema_data:
+        raise ValueError("Schema must contain a 'fields' key")
+    
+    return _parse_field_based_schema(schema_data)
 
 
 def _parse_field_based_schema(schema_data: Dict) -> SchemaValidator:
