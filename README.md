@@ -8,7 +8,11 @@ A powerful data validation library built on Polars that goes beyond type checkin
 - **Type Validation**: Automatically validate DataFrame column types against schema
 - **Nullability Constraints**: Control acceptable rates of null values by ratio or count
 - **Value Constraints**: Define minimum and maximum acceptable values
-- **Statistical Constraints**: Validate mean, median, and arbitrary percentiles with upper/lower bounds
+- **Statistical Constraints**: Validate mean, median, standard deviation, and arbitrary percentiles with upper/lower bounds
+- **Uniqueness Constraints**: Ensure columns have minimum ratios or counts of unique values
+- **String Validation**: Validate string lengths and regex pattern matching
+- **Categorical Validation**: Ensure values are within predefined sets
+- **Row Count Validation**: Control minimum and maximum DataFrame row counts
 - **Native Polars**: Uses native Polars expressions for high performance
 - **JSON Schema Support**: Define validation schemas in JSON files for easy configuration
 - **ValidationError Exception**: Automatic error raising on validation failure with detailed messages
@@ -310,6 +314,134 @@ PercentileConstraint(
     percentile=0.95,      # 0.0 to 1.0
     lower_bound=80,
     upper_bound=100
+)
+```
+
+### Uniqueness Constraint
+
+Validates that a column has a minimum ratio or count of unique values.
+
+**Field-Based JSON Schema:**
+```json
+{
+  "type": "uniqueness",
+  "min_unique_ratio": 0.95,   // Optional: Min ratio (0.0-1.0)
+  "min_unique_count": 100     // Optional: Min count
+}
+```
+
+**Python:**
+```python
+UniquenessConstraint(
+    column="column_name",
+    min_unique_ratio=0.95,    # At least one of these
+    min_unique_count=100      # must be specified
+)
+```
+
+### Standard Deviation Constraint
+
+Validates that the standard deviation of a column falls within specified bounds.
+
+**Field-Based JSON Schema:**
+```json
+{
+  "type": "standard_deviation",
+  "lower_bound": 1.0,     // Optional
+  "upper_bound": 5.0      // Optional (at least one required)
+}
+```
+
+**Python:**
+```python
+StandardDeviationConstraint(
+    column="column_name",
+    lower_bound=1.0,
+    upper_bound=5.0
+)
+```
+
+### String Length Constraint
+
+Validates that string values in a column have lengths within specified bounds.
+
+**Field-Based JSON Schema:**
+```json
+{
+  "type": "string_length",
+  "min_length": 5,        // Optional: Min string length
+  "max_length": 100       // Optional: Max string length
+}
+```
+
+**Python:**
+```python
+StringLengthConstraint(
+    column="column_name",
+    min_length=5,
+    max_length=100
+)
+```
+
+### Regex Pattern Constraint
+
+Validates that string values match a regular expression pattern.
+
+**Field-Based JSON Schema:**
+```json
+{
+  "type": "regex_pattern",
+  "pattern": "^[A-Z]{3}-\\d{4}$"   // Regex pattern
+}
+```
+
+**Python:**
+```python
+RegexPatternConstraint(
+    column="column_name",
+    pattern=r"^[A-Z]{3}-\d{4}$"
+)
+```
+
+### Value Set Constraint
+
+Validates that values are within a predefined set (categorical validation).
+
+**Field-Based JSON Schema:**
+```json
+{
+  "type": "value_set",
+  "allowed_values": ["active", "inactive", "pending"]
+}
+```
+
+**Python:**
+```python
+ValueSetConstraint(
+    column="column_name",
+    allowed_values=["active", "inactive", "pending"]
+)
+```
+
+### Row Count Constraint
+
+Validates that the DataFrame has a minimum or maximum number of rows.
+
+**Field-Based JSON Schema:**
+```json
+{
+  "type": "row_count",
+  "min_rows": 10,         // Optional: Min row count
+  "max_rows": 1000        // Optional: Max row count
+}
+```
+
+**Python:**
+```python
+RowCountConstraint(
+    column="",              # Not used for this constraint
+    min_rows=10,
+    max_rows=1000
 )
 ```
 

@@ -1,0 +1,89 @@
+{
+  "fields": {
+    "user_id": {
+      "type": "String",
+      "constraints": [
+        {
+          "type": "nullability",
+          "max_null_ratio": 0.0
+        },
+        {
+          "type": "uniqueness",
+          "min_unique_ratio": 0.99
+        },
+        {
+          "type": "string_length",
+          "min_length": 8,
+          "max_length": 20
+        },
+        {
+          "type": "regex_pattern",
+          "pattern": "^user_\\d+$"
+        }
+      ]
+    },
+    "email": {
+      "type": "String",
+      "constraints": [
+        {
+          "type": "nullability",
+          "max_null_ratio": 0.05
+        },
+        {
+          "type": "regex_pattern",
+          "pattern": "@"
+        }
+      ]
+    },
+    "status": {
+      "type": "String",
+      "constraints": [
+        {
+          "type": "value_set",
+          "allowed_values": ["active", "inactive", "pending", "suspended"]
+        }
+      ]
+    },
+    "age": {
+      "type": "Int64",
+      "constraints": [
+        {
+          "type": "minimum_value",
+          "min_value": 0
+        },
+        {
+          "type": "maximum_value",
+          "max_value": 120
+        },
+        {
+          "type": "mean",
+          "lower_bound": 18,
+          "upper_bound": 65
+        },
+        {
+          "type": "standard_deviation",
+          "lower_bound": 5,
+          "upper_bound": 20
+        }
+      ]
+    },
+    "score": {
+      "type": "Float64",
+      "constraints": [
+        {
+          "type": "minimum_value",
+          "min_value": 0.0
+        },
+        {
+          "type": "maximum_value",
+          "max_value": 100.0
+        },
+        {
+          "type": "percentile",
+          "percentile": 0.95,
+          "upper_bound": 98.0
+        }
+      ]
+    }
+  }
+}
