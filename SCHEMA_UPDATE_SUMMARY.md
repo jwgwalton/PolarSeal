@@ -74,7 +74,7 @@ The user requested the following changes to PolarSeal:
 3. **`src/polarseal/schema.py`**
    - Changed `load_schema()` return type from `List[Constraint]` to `SchemaValidator`
    - Added `_parse_field_based_schema()` function
-   - Support both old and new schema formats for backward compatibility
+   - **Only supports field-based schema format** (backward compatibility removed)
 
 4. **Example Schemas Updated:**
    - `examples/user_schema.json`
@@ -87,9 +87,10 @@ The user requested the following changes to PolarSeal:
    - Created `examples/demo_new_features.py`
 
 6. **Tests:**
-   - Created `tests/test_new_schema_format.py` (16 new tests)
+   - Created `tests/test_new_schema_format.py` (14 tests for new format)
    - Updated existing tests to work with new API
-   - All 83 tests passing
+   - **Removed backward compatibility tests**
+   - All 81 tests passing
 
 ### 4. Usage Examples
 
@@ -140,23 +141,27 @@ else:
         print(f"  - {failure['message']}")
 ```
 
-### 5. Backward Compatibility
+### 5. Schema Format (Only Supported)
 
-The old constraint-based schema format is still supported:
+**Field-Based Schema Format:**
 
 ```json
 {
-  "constraints": [
-    {
-      "type": "maximum_value",
-      "column": "age",
-      "max_value": 120
+  "fields": {
+    "age": {
+      "type": "Int64",
+      "constraints": [
+        {
+          "type": "maximum_value",
+          "max_value": 120
+        }
+      ]
     }
-  ]
+  }
 }
 ```
 
-This ensures existing schemas continue to work without modification.
+**Note:** The old constraint-based format is **no longer supported**. Schemas must use the field-based format shown above.
 
 ### 6. Type System
 
@@ -197,10 +202,9 @@ Test coverage includes:
 - ValidationError raising ✓
 - Empty constraints lists ✓
 - Type mismatch detection ✓
-- Backward compatibility ✓
 - Legacy behavior with `raise_on_error=False` ✓
 
-All 83 tests passing with 96% code coverage.
+All 81 tests passing with 96% code coverage.
 
 ## Summary
 
@@ -211,4 +215,4 @@ All requirements from the problem statement have been successfully implemented:
 ✅ All fields must specify types  
 ✅ Failed validation throws ValidationError  
 
-The implementation is backward compatible, well-tested, and fully documented.
+The implementation is well-tested and fully documented. Only the field-based schema format is supported.
