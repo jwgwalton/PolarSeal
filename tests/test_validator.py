@@ -108,7 +108,7 @@ class TestSchemaValidator:
         ]
         
         validator = SchemaValidator(constraints)
-        result = validator.validate(df)
+        result = validator.validate(df, raise_on_error=False)
         
         assert result.passed is False
         assert len(result.results) == 1
@@ -141,7 +141,7 @@ class TestSchemaValidator:
         ]
         
         validator = SchemaValidator(constraints)
-        result = validator.validate(df)
+        result = validator.validate(df, raise_on_error=False)
         
         assert result.passed is False
         assert len(result.results) == 3

@@ -60,9 +60,8 @@ class TestIntegrationWithSchemas:
             temp_path = f.name
         
         try:
-            constraints = load_schema(temp_path)
-            validator = SchemaValidator(constraints)
-            result = validator.validate(df)
+            validator = load_schema(temp_path)
+            result = validator.validate(df, raise_on_error=False)
             
             assert result.passed is True
             assert len(result.results) == 5
@@ -105,9 +104,8 @@ class TestIntegrationWithSchemas:
             temp_path = f.name
         
         try:
-            constraints = load_schema(temp_path)
-            validator = SchemaValidator(constraints)
-            result = validator.validate(df)
+            validator = load_schema(temp_path)
+            result = validator.validate(df, raise_on_error=False)
             
             assert result.passed is False
             failures = result.get_failures()
@@ -159,9 +157,8 @@ class TestIntegrationWithSchemas:
             temp_path = f.name
         
         try:
-            constraints = load_schema(temp_path)
-            validator = SchemaValidator(constraints)
-            result = validator.validate(df)
+            validator = load_schema(temp_path)
+            result = validator.validate(df, raise_on_error=False)
             
             # The result should pass with reasonable bounds
             assert result.passed is True
@@ -231,9 +228,8 @@ class TestIntegrationWithSchemas:
             temp_path = f.name
         
         try:
-            constraints = load_schema(temp_path)
-            validator = SchemaValidator(constraints)
-            result = validator.validate(df)
+            validator = load_schema(temp_path)
+            result = validator.validate(df, raise_on_error=False)
             
             assert result.passed is True
             assert len(result.results) == 7

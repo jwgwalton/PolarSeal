@@ -1,6 +1,6 @@
 """PolarSeal - A data validation library built on Polars."""
 
-from .validator import SchemaValidator
+from .validator import SchemaValidator, ValidationError
 from .constraints import (
     NullabilityConstraint,
     MaximumValueConstraint,
@@ -15,6 +15,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     "SchemaValidator",
+    "ValidationError",
     "NullabilityConstraint",
     "MaximumValueConstraint",
     "MinimumValueConstraint",

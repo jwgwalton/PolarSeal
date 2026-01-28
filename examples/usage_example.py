@@ -1,11 +1,11 @@
 """Example usage of PolarSeal validation library."""
 
 import polars as pl
-from polarseal import load_schema, SchemaValidator
+from polarseal import load_schema, ValidationError
 
-# Example 1: Basic usage with user data
+# Example 1: Basic usage with new field-based schema format
 print("=" * 60)
-print("Example 1: User Data Validation")
+print("Example 1: User Data Validation with New Schema Format")
 print("=" * 60)
 
 # Create sample user data
@@ -18,40 +18,84 @@ user_df = pl.DataFrame({
 print("\nUser DataFrame:")
 print(user_df)
 
-# Load schema and validate
-constraints = load_schema("examples/user_schema.json")
-validator = SchemaValidator(constraints)
-result = validator.validate(user_df)
+# Load schema and validate (will raise ValidationError if validation fails)
+try:
+    validator = load_schema("examples/user_schema.json")
+    result = validator.validate(user_df)
+    print("\n✓ Validation passed!")
+except ValidationError as e:
+    print(f"\n✗ Validation failed: {e}")
 
-print(f"\n{result.summary()}")
-
-# Example 2: Sales data validation
+# Example 2: Demonstrating ValidationError with failing data
 print("\n" + "=" * 60)
-print("Example 2: Sales Data Validation")
+print("Example 2: Handling ValidationError")
 print("=" * 60)
 
-# Create sample sales data
-sales_df = pl.DataFrame({
-    "transaction_id": list(range(1, 101)),
-    "amount": [50 + i * 5 + (i % 10) * 2 for i in range(100)],
+# Create data that will fail validation
+bad_df = pl.DataFrame({
+    "user_id": [1, 2, 3],
+    "email": ["user1@example.com", "user2@example.com", "user3@example.com"],
+    "age": [25, 150, 28],  # 150 exceeds maximum of 120
 })
 
-print("\nSales DataFrame (first 5 rows):")
-print(sales_df.head())
+print("\nDataFrame with invalid age:")
+print(bad_df)
 
-# Load schema and validate
-constraints = load_schema("examples/sales_schema.json")
-validator = SchemaValidator(constraints)
-result = validator.validate(sales_df)
+try:
+    validator = load_schema("examples/user_schema.json")
+    result = validator.validate(bad_df)
+    print("\n✓ Validation passed!")
+except ValidationError as e:
+    print(f"\n✗ Validation failed!")
+    print(f"\nError details:\n{e}")
 
-print(f"\n{result.summary()}")
-
-# Example 3: Programmatic constraint creation
+# Example 3: Legacy behavior with raise_on_error=False
 print("\n" + "=" * 60)
-print("Example 3: Programmatic Constraint Creation")
+print("Example 3: Legacy Behavior (raise_on_error=False)")
+print("=" * 60)
+
+print("\nSame invalid DataFrame:")
+print(bad_df)
+
+validator = load_schema("examples/user_schema.json")
+result = validator.validate(bad_df, raise_on_error=False)
+
+print(f"\nValidation result: {result}")
+print(f"Passed: {result.passed}")
+print(f"\nFailed constraints:")
+for failure in result.get_failures():
+    print(f"  - {failure['constraint']}: {failure['message']}")
+
+# Example 4: Type validation
+print("\n" + "=" * 60)
+print("Example 4: Type Validation")
+print("=" * 60)
+
+# Create data with wrong type
+wrong_type_df = pl.DataFrame({
+    "user_id": ["a", "b", "c"],  # String instead of Int64
+    "email": ["user1@example.com", "user2@example.com", "user3@example.com"],
+    "age": [25, 30, 35],
+})
+
+print("\nDataFrame with wrong type for user_id:")
+print(wrong_type_df)
+
+try:
+    validator = load_schema("examples/user_schema.json")
+    result = validator.validate(wrong_type_df)
+    print("\n✓ Validation passed!")
+except ValidationError as e:
+    print(f"\n✗ Validation failed!")
+    print(f"\nError details:\n{e}")
+
+# Example 5: Programmatic constraint creation still works
+print("\n" + "=" * 60)
+print("Example 5: Programmatic Constraint Creation")
 print("=" * 60)
 
 from polarseal import (
+    SchemaValidator,
     NullabilityConstraint,
     MaximumValueConstraint,
     MinimumValueConstraint,
@@ -68,7 +112,7 @@ temp_df = pl.DataFrame({
 print("\nTemperature DataFrame (first 5 rows):")
 print(temp_df.head())
 
-# Create constraints programmatically
+# Create constraints programmatically with type definitions
 constraints = [
     NullabilityConstraint(column="sensor_id", max_null_ratio=0.0),
     NullabilityConstraint(column="temperature", max_null_ratio=0.05),
@@ -77,26 +121,62 @@ constraints = [
     MeanConstraint(column="temperature", lower_bound=19.0, upper_bound=23.0),
 ]
 
-validator = SchemaValidator(constraints)
-result = validator.validate(temp_df)
+# Define field types
+field_definitions = {
+    "sensor_id": "String",
+    "temperature": "Float64"
+}
 
-print(f"\n{result.summary()}")
+validator = SchemaValidator(constraints, field_definitions)
 
-# Example 4: Detailed result inspection
+try:
+    result = validator.validate(temp_df)
+    print("\n✓ Validation passed!")
+except ValidationError as e:
+    print(f"\n✗ Validation failed: {e}")
+
+# Example 6: Field with empty constraints
 print("\n" + "=" * 60)
-print("Example 4: Detailed Result Inspection")
+print("Example 6: Field with Type but No Constraints")
 print("=" * 60)
 
-result_dict = result.to_dict()
-print(f"\nValidation passed: {result_dict['passed']}")
-print(f"Total constraints: {result_dict['total_constraints']}")
-print(f"Passed constraints: {result_dict['passed_constraints']}")
-print(f"Failed constraints: {result_dict['failed_constraints']}")
+simple_df = pl.DataFrame({
+    "id": [1, 2, 3, 4, 5],
+    "name": ["Alice", "Bob", "Charlie", "David", "Eve"],
+})
 
-print("\nDetailed results:")
-for i, constraint_result in enumerate(result_dict['results'], 1):
-    print(f"\n{i}. {constraint_result['constraint']}")
-    print(f"   Status: {'✓ PASSED' if constraint_result['passed'] else '✗ FAILED'}")
-    print(f"   Message: {constraint_result['message']}")
-    if constraint_result['details']:
-        print(f"   Details: {constraint_result['details']}")
+print("\nSimple DataFrame:")
+print(simple_df)
+
+# Create a simple schema with just type definitions, no constraints
+import json
+import tempfile
+from pathlib import Path
+
+simple_schema = {
+    "fields": {
+        "id": {
+            "type": "Int64",
+            "constraints": []
+        },
+        "name": {
+            "type": "String",
+            "constraints": []
+        }
+    }
+}
+
+with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+    json.dump(simple_schema, f)
+    temp_path = f.name
+
+try:
+    validator = load_schema(temp_path)
+    result = validator.validate(simple_df)
+    print("\n✓ Validation passed! (type checking only, no constraints)")
+finally:
+    Path(temp_path).unlink()
+
+print("\n" + "=" * 60)
+print("Examples completed!")
+print("=" * 60)

@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 from .constraints import (
     Constraint,
@@ -13,16 +13,17 @@ from .constraints import (
     MeanConstraint,
     PercentileConstraint,
 )
+from .validator import SchemaValidator
 
 
-def load_schema(schema_path: Union[str, Path]) -> List[Constraint]:
+def load_schema(schema_path: Union[str, Path]) -> SchemaValidator:
     """Load a validation schema from a JSON file.
     
     Args:
         schema_path: Path to the JSON schema file.
         
     Returns:
-        A list of Constraint objects.
+        A SchemaValidator object configured with the schema.
         
     Raises:
         FileNotFoundError: If the schema file doesn't exist.
@@ -39,28 +40,78 @@ def load_schema(schema_path: Union[str, Path]) -> List[Constraint]:
     return _parse_schema(schema_data)
 
 
-def _parse_schema(schema_data: Dict) -> List[Constraint]:
-    """Parse schema data into Constraint objects.
+def _parse_schema(schema_data: Dict) -> SchemaValidator:
+    """Parse schema data into a SchemaValidator object.
     
     Args:
         schema_data: Dictionary containing schema definition.
         
     Returns:
-        A list of Constraint objects.
+        A SchemaValidator object.
         
     Raises:
         ValueError: If the schema is invalid.
     """
-    if "constraints" not in schema_data:
-        raise ValueError("Schema must contain a 'constraints' key")
+    # Support both old and new formats
+    if "fields" in schema_data:
+        # New format: field-based schema
+        return _parse_field_based_schema(schema_data)
+    elif "constraints" in schema_data:
+        # Old format: flat constraint list (for backward compatibility)
+        constraints = []
+        for constraint_def in schema_data["constraints"]:
+            constraint = _create_constraint(constraint_def)
+            constraints.append(constraint)
+        return SchemaValidator(constraints)
+    else:
+        raise ValueError("Schema must contain either 'fields' or 'constraints' key")
+
+
+def _parse_field_based_schema(schema_data: Dict) -> SchemaValidator:
+    """Parse field-based schema format.
     
+    Args:
+        schema_data: Dictionary containing field-based schema definition.
+        
+    Returns:
+        A SchemaValidator object.
+        
+    Raises:
+        ValueError: If the schema is invalid.
+    """
+    if "fields" not in schema_data:
+        raise ValueError("Schema must contain a 'fields' key")
+    
+    fields = schema_data["fields"]
+    if not isinstance(fields, dict):
+        raise ValueError("'fields' must be a dictionary")
+    
+    field_definitions = {}
     constraints = []
     
-    for constraint_def in schema_data["constraints"]:
-        constraint = _create_constraint(constraint_def)
-        constraints.append(constraint)
+    for field_name, field_spec in fields.items():
+        if not isinstance(field_spec, dict):
+            raise ValueError(f"Field '{field_name}' specification must be a dictionary")
+        
+        if "type" not in field_spec:
+            raise ValueError(f"Field '{field_name}' must specify a 'type'")
+        
+        # Store field type
+        field_definitions[field_name] = field_spec["type"]
+        
+        # Parse constraints for this field (can be empty)
+        field_constraints = field_spec.get("constraints", [])
+        if not isinstance(field_constraints, list):
+            raise ValueError(f"Field '{field_name}' constraints must be a list")
+        
+        for constraint_def in field_constraints:
+            # Add column name to constraint definition
+            constraint_def_with_column = dict(constraint_def)
+            constraint_def_with_column["column"] = field_name
+            constraint = _create_constraint(constraint_def_with_column)
+            constraints.append(constraint)
     
-    return constraints
+    return SchemaValidator(constraints, field_definitions)
 
 
 def _create_constraint(constraint_def: Dict) -> Constraint:

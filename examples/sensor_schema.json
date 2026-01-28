@@ -1,50 +1,52 @@
 {
-  "constraints": [
-    {
-      "type": "nullability",
-      "column": "sensor_id",
-      "max_null_ratio": 0.0
+  "fields": {
+    "sensor_id": {
+      "type": "String",
+      "constraints": [
+        {
+          "type": "nullability",
+          "max_null_ratio": 0.0
+        }
+      ]
     },
-    {
-      "type": "nullability",
-      "column": "temperature",
-      "max_null_ratio": 0.01
-    },
-    {
-      "type": "minimum_value",
-      "column": "temperature",
-      "min_value": -40
-    },
-    {
-      "type": "maximum_value",
-      "column": "temperature",
-      "max_value": 120
-    },
-    {
-      "type": "mean",
-      "column": "temperature",
-      "lower_bound": 15,
-      "upper_bound": 35
-    },
-    {
-      "type": "percentile",
-      "column": "temperature",
-      "percentile": 0.01,
-      "lower_bound": 0,
-      "upper_bound": 20
-    },
-    {
-      "type": "percentile",
-      "column": "temperature",
-      "percentile": 0.99,
-      "lower_bound": 20,
-      "upper_bound": 50
-    },
-    {
-      "type": "median",
-      "column": "temperature",
-      "lower_bound": 18,
-      "upper_bound": 28
+    "temperature": {
+      "type": "Float64",
+      "constraints": [
+        {
+          "type": "nullability",
+          "max_null_ratio": 0.01
+        },
+        {
+          "type": "minimum_value",
+          "min_value": -40
+        },
+        {
+          "type": "maximum_value",
+          "max_value": 120
+        },
+        {
+          "type": "mean",
+          "lower_bound": 15,
+          "upper_bound": 35
+        },
+        {
+          "type": "percentile",
+          "percentile": 0.01,
+          "lower_bound": 0,
+          "upper_bound": 20
+        },
+        {
+          "type": "percentile",
+          "percentile": 0.99,
+          "lower_bound": 20,
+          "upper_bound": 50
+        },
+        {
+          "type": "median",
+          "lower_bound": 18,
+          "upper_bound": 28
+        }
+      ]
     }
-  ]
+  }
 }

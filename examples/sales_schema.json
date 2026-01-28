@@ -1,45 +1,48 @@
 {
-  "constraints": [
-    {
-      "type": "nullability",
-      "column": "transaction_id",
-      "max_null_count": 0
+  "fields": {
+    "transaction_id": {
+      "type": "Int64",
+      "constraints": [
+        {
+          "type": "nullability",
+          "max_null_count": 0
+        }
+      ]
     },
-    {
-      "type": "minimum_value",
-      "column": "amount",
-      "min_value": 0.01
-    },
-    {
-      "type": "maximum_value",
-      "column": "amount",
-      "max_value": 10000
-    },
-    {
-      "type": "mean",
-      "column": "amount",
-      "lower_bound": 50,
-      "upper_bound": 500
-    },
-    {
-      "type": "median",
-      "column": "amount",
-      "lower_bound": 40,
-      "upper_bound": 200
-    },
-    {
-      "type": "percentile",
-      "column": "amount",
-      "percentile": 0.95,
-      "lower_bound": 100,
-      "upper_bound": 1000
-    },
-    {
-      "type": "percentile",
-      "column": "amount",
-      "percentile": 0.05,
-      "lower_bound": 1,
-      "upper_bound": 50
+    "amount": {
+      "type": "Float64",
+      "constraints": [
+        {
+          "type": "minimum_value",
+          "min_value": 0.01
+        },
+        {
+          "type": "maximum_value",
+          "max_value": 10000
+        },
+        {
+          "type": "mean",
+          "lower_bound": 50,
+          "upper_bound": 500
+        },
+        {
+          "type": "median",
+          "lower_bound": 40,
+          "upper_bound": 200
+        },
+        {
+          "type": "percentile",
+          "percentile": 0.95,
+          "lower_bound": 100,
+          "upper_bound": 1000
+        },
+        {
+          "type": "percentile",
+          "percentile": 0.05,
+          "lower_bound": 1,
+          "upper_bound": 50
+        }
+      ]
     }
-  ]
+  }
 }

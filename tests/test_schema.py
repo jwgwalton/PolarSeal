@@ -43,10 +43,10 @@ class TestSchemaLoading:
             temp_path = f.name
         
         try:
-            constraints = load_schema(temp_path)
-            assert len(constraints) == 2
-            assert isinstance(constraints[0], NullabilityConstraint)
-            assert isinstance(constraints[1], MaximumValueConstraint)
+            validator = load_schema(temp_path)
+            assert len(validator.constraints) == 2
+            assert isinstance(validator.constraints[0], NullabilityConstraint)
+            assert isinstance(validator.constraints[1], MaximumValueConstraint)
         finally:
             Path(temp_path).unlink()
 
@@ -56,8 +56,8 @@ class TestSchemaLoading:
             load_schema("/nonexistent/schema.json")
 
     def test_parse_schema_missing_constraints_key(self):
-        """Test parsing schema without constraints key."""
-        with pytest.raises(ValueError, match="must contain a 'constraints' key"):
+        """Test parsing schema without constraints or fields key."""
+        with pytest.raises(ValueError, match="must contain either 'fields' or 'constraints'"):
             _parse_schema({"other_key": []})
 
     def test_create_nullability_constraint(self):
