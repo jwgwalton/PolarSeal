@@ -8,6 +8,12 @@ from .constraints import (
     MedianConstraint,
     MeanConstraint,
     PercentileConstraint,
+    UniquenessConstraint,
+    StandardDeviationConstraint,
+    StringLengthConstraint,
+    RegexPatternConstraint,
+    ValueSetConstraint,
+    RowCountConstraint,
 )
 from .schema import load_schema
 
@@ -22,5 +28,11 @@ __all__ = [
     "MedianConstraint",
     "MeanConstraint",
     "PercentileConstraint",
+    "UniquenessConstraint",
+    "StandardDeviationConstraint",
+    "StringLengthConstraint",
+    "RegexPatternConstraint",
+    "ValueSetConstraint",
+    "RowCountConstraint",
     "load_schema",
 ]

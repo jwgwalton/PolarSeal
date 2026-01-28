@@ -12,6 +12,12 @@ from .constraints import (
     MedianConstraint,
     MeanConstraint,
     PercentileConstraint,
+    UniquenessConstraint,
+    StandardDeviationConstraint,
+    StringLengthConstraint,
+    RegexPatternConstraint,
+    ValueSetConstraint,
+    RowCountConstraint,
 )
 from .validator import SchemaValidator
 
@@ -180,6 +186,58 @@ def _create_constraint(constraint_def: Dict) -> Constraint:
             percentile=percentile,
             lower_bound=lower_bound,
             upper_bound=upper_bound,
+        )
+    
+    elif constraint_type == "uniqueness":
+        min_unique_ratio = constraint_def.get("min_unique_ratio")
+        min_unique_count = constraint_def.get("min_unique_count")
+        return UniquenessConstraint(
+            column=column,
+            min_unique_ratio=min_unique_ratio,
+            min_unique_count=min_unique_count,
+        )
+    
+    elif constraint_type == "standard_deviation":
+        lower_bound = constraint_def.get("lower_bound")
+        upper_bound = constraint_def.get("upper_bound")
+        return StandardDeviationConstraint(
+            column=column,
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
+        )
+    
+    elif constraint_type == "string_length":
+        min_length = constraint_def.get("min_length")
+        max_length = constraint_def.get("max_length")
+        return StringLengthConstraint(
+            column=column,
+            min_length=min_length,
+            max_length=max_length,
+        )
+    
+    elif constraint_type == "regex_pattern":
+        if "pattern" not in constraint_def:
+            raise ValueError("regex_pattern constraint requires 'pattern' key")
+        return RegexPatternConstraint(
+            column=column,
+            pattern=constraint_def["pattern"],
+        )
+    
+    elif constraint_type == "value_set":
+        if "allowed_values" not in constraint_def:
+            raise ValueError("value_set constraint requires 'allowed_values' key")
+        return ValueSetConstraint(
+            column=column,
+            allowed_values=constraint_def["allowed_values"],
+        )
+    
+    elif constraint_type == "row_count":
+        min_rows = constraint_def.get("min_rows")
+        max_rows = constraint_def.get("max_rows")
+        return RowCountConstraint(
+            column=column,
+            min_rows=min_rows,
+            max_rows=max_rows,
         )
     
     else:
