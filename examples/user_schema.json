@@ -1,0 +1,36 @@
+{
+  "constraints": [
+    {
+      "type": "nullability",
+      "column": "user_id",
+      "max_null_ratio": 0.0
+    },
+    {
+      "type": "nullability",
+      "column": "email",
+      "max_null_ratio": 0.05
+    },
+    {
+      "type": "minimum_value",
+      "column": "age",
+      "min_value": 0
+    },
+    {
+      "type": "maximum_value",
+      "column": "age",
+      "max_value": 120
+    },
+    {
+      "type": "mean",
+      "column": "age",
+      "lower_bound": 18,
+      "upper_bound": 65
+    },
+    {
+      "type": "median",
+      "column": "age",
+      "lower_bound": 25,
+      "upper_bound": 50
+    }
+  ]
+}
