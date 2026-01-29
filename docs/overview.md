@@ -4,6 +4,11 @@
 
 PolarSeal is a comprehensive data validation library built on Polars that enables validation beyond simple type checking. The library allows users to define constraints for DataFrames using JSON schemas or programmatic constraints.
 
+> **Note**: This document provides a high-level overview. For detailed documentation, see:
+> - [Getting Started Guide](getting-started.md)
+> - [Complete Constraints Reference](constraints/index.md)
+> - [API Reference](api-reference.md)
+
 ## Core Features
 
 ### 1. Field-Based Schema Validation
@@ -44,26 +49,33 @@ Type matching includes exact matches and alias support (e.g., `String` matches `
 
 ### 3. Constraint Types
 
-All constraints use native Polars expressions for optimal performance:
+PolarSeal provides **12 constraint types** organized into categories:
 
-#### Nullability Constraint
-Controls the acceptable rate of null values in a column.
-- Supports ratio-based (`max_null_ratio`: 0.0-1.0)
-- Supports count-based (`max_null_count`: integer)
+#### Data Quality Constraints
+- **[NullabilityConstraint](constraints/nullability.md)** - Controls null value rates (ratio/count)
+- **[UniquenessConstraint](constraints/uniqueness.md)** - Ensures minimum unique values
 
 #### Value Range Constraints
-- **Minimum Value**: Ensures all values ≥ minimum
-- **Maximum Value**: Ensures all values ≤ maximum
+- **[MinimumValueConstraint](constraints/minimum-value.md)** - Ensures values ≥ minimum
+- **[MaximumValueConstraint](constraints/maximum-value.md)** - Ensures values ≤ maximum
 
 #### Statistical Constraints
-- **Mean**: Validates column mean falls within bounds
-- **Median**: Validates column median falls within bounds
-- **Percentile**: Validates arbitrary percentiles (0.0-1.0) fall within bounds
+- **[MeanConstraint](constraints/mean.md)** - Validates column mean falls within bounds
+- **[MedianConstraint](constraints/median.md)** - Validates column median falls within bounds
+- **[PercentileConstraint](constraints/percentile.md)** - Validates arbitrary percentiles (0.0-1.0)
+- **[StandardDeviationConstraint](constraints/standard-deviation.md)** - Validates variance falls within bounds
 
-All statistical constraints support:
-- Upper bound only
-- Lower bound only
-- Both upper and lower bounds
+#### String Constraints
+- **[StringLengthConstraint](constraints/string-length.md)** - Validates string length bounds
+- **[RegexPatternConstraint](constraints/regex-pattern.md)** - Validates pattern matching
+
+#### Categorical Constraints
+- **[ValueSetConstraint](constraints/value-set.md)** - Ensures values from predefined set
+
+#### DataFrame Constraints
+- **[RowCountConstraint](constraints/row-count.md)** - Validates DataFrame row count
+
+All constraints use native Polars expressions for optimal performance.
 
 ### 4. Validation Error Handling
 
@@ -92,28 +104,38 @@ Legacy behavior (returning ValidationResult without raising) is available via `r
 PolarSeal/
 ├── src/polarseal/
 │   ├── __init__.py           # Package exports
-│   ├── constraints.py        # All constraint implementations
+│   ├── constraints.py        # All 12 constraint implementations
 │   ├── schema.py            # JSON schema loading
 │   └── validator.py         # SchemaValidator and ValidationResult
 ├── tests/
-│   ├── test_constraints.py  # Constraint unit tests
-│   ├── test_schema.py       # Schema loading tests
-│   ├── test_validator.py    # Validator tests
-│   └── test_integration.py  # Integration tests
+│   ├── test_constraints.py      # Constraint unit tests
+│   ├── test_new_constraints.py  # New constraint tests
+│   ├── test_schema.py           # Schema loading tests
+│   ├── test_validator.py        # Validator tests
+│   └── test_integration.py      # Integration tests
 ├── examples/
-│   ├── user_schema.json     # User data validation example
-│   ├── sales_schema.json    # Sales data validation example
-│   ├── sensor_schema.json   # Sensor data validation example
-│   └── usage_example.py     # Comprehensive usage examples
+│   ├── user_schema.json             # User data validation
+│   ├── sales_schema.json            # Sales transactions
+│   ├── sensor_schema.json           # IoT sensor data
+│   ├── advanced_schema.json         # All constraints
+│   └── new_constraints_examples.py  # Usage examples
 └── docs/
-    └── overview.md          # This file
+    ├── index.md                     # Documentation home
+    ├── getting-started.md           # Quick start guide
+    ├── api-reference.md             # API documentation
+    ├── overview.md                  # This file
+    └── constraints/                 # Individual constraint docs
+        ├── index.md
+        ├── nullability.md
+        ├── uniqueness.md
+        └── ... (all 12 constraints)
 ```
 
 ### Key Components
 
 1. **Constraints** (`constraints.py`)
    - Base `Constraint` class
-   - Individual constraint implementations
+   - 12 constraint implementations
    - All use native Polars expressions
 
 2. **Schema Loading** (`schema.py`)
@@ -129,7 +151,9 @@ PolarSeal/
 
 ## Usage Patterns
 
-### Pattern 1: JSON Schema with Exceptions
+See the [Getting Started Guide](getting-started.md) for detailed usage examples.
+
+### Quick Example: JSON Schema
 
 ```python
 import polars as pl
@@ -148,7 +172,7 @@ except ValidationError as e:
     print(f"✗ Validation failed: {e}")
 ```
 
-### Pattern 2: Programmatic Constraints
+### Quick Example: Programmatic
 
 ```python
 from polarseal import (
@@ -169,25 +193,6 @@ field_definitions = {"temperature": "Float64"}
 validator = SchemaValidator(constraints, field_definitions)
 result = validator.validate(df)
 ```
-
-### Pattern 3: Type-Only Validation
-
-```json
-{
-  "fields": {
-    "id": {
-      "type": "Int64",
-      "constraints": []
-    },
-    "name": {
-      "type": "String",
-      "constraints": []
-    }
-  }
-}
-```
-
-This validates only that the DataFrame has the correct columns with the correct types, without additional constraints.
 
 ## Performance Characteristics
 
@@ -210,10 +215,10 @@ percentile_value = df.select(pl.col(column).quantile(0.95)).item()
 
 ## Testing and Quality
 
-- **Test Coverage**: 96%
-- **Total Tests**: 81 (all passing)
+- **Test Coverage**: High coverage across all constraints
+- **Total Tests**: 114 tests (all passing)
 - **Test Categories**:
-  - Constraint validation tests
+  - Constraint validation tests (original and new constraints)
   - Schema loading tests
   - Validator tests
   - Integration tests
@@ -224,25 +229,27 @@ percentile_value = df.select(pl.col(column).quantile(0.95)).item()
 ### 1. User Data Validation
 
 Validate user registration data:
-- Age within reasonable bounds
-- Required fields present
-- Email format (via regex constraints if implemented)
+- Age within reasonable bounds ([MinimumValueConstraint](constraints/minimum-value.md), [MaximumValueConstraint](constraints/maximum-value.md))
+- Required fields present ([NullabilityConstraint](constraints/nullability.md))
+- Email format ([RegexPatternConstraint](constraints/regex-pattern.md))
+- Unique user IDs ([UniquenessConstraint](constraints/uniqueness.md))
 
 ### 2. Sales Transaction Validation
 
 Validate sales data:
-- Prices within expected ranges
-- Quantities non-negative
-- Statistical checks on transaction amounts
+- Prices within expected ranges ([MinimumValueConstraint](constraints/minimum-value.md), [MaximumValueConstraint](constraints/maximum-value.md))
+- Valid product categories ([ValueSetConstraint](constraints/value-set.md))
+- Statistical checks on transaction amounts ([MeanConstraint](constraints/mean.md), [StandardDeviationConstraint](constraints/standard-deviation.md))
 
 ### 3. IoT Sensor Data Validation
 
 Validate sensor readings:
-- Temperature within operational limits
-- No excessive null readings
-- Mean values within expected ranges
+- Temperature within operational limits ([MinimumValueConstraint](constraints/minimum-value.md), [MaximumValueConstraint](constraints/maximum-value.md))
+- No excessive null readings ([NullabilityConstraint](constraints/nullability.md))
+- Mean values within expected ranges ([MeanConstraint](constraints/mean.md))
+- Consistent variance ([StandardDeviationConstraint](constraints/standard-deviation.md))
 
-See `examples/` directory for complete examples.
+See [examples/](../examples/) directory for complete working examples.
 
 ## Best Practices
 
@@ -250,38 +257,16 @@ See `examples/` directory for complete examples.
 2. **Empty Constraints for Type Checking**: Use `"constraints": []` when you only need type validation
 3. **Exception Handling**: Always catch `ValidationError` in production code
 4. **Incremental Validation**: Test constraints incrementally during development
-5. **Reusable Schemas**: Store schemas in JSON files for reusability across different validation points
+5. **Reusable Schemas**: Store schemas in JSON files for reusability across validation points
+6. **Choose Appropriate Constraints**: Use the right constraint for your data type and validation needs
+7. **Document Assumptions**: Include comments in schemas explaining validation thresholds
 
-## Migration Notes
+## Additional Resources
 
-PolarSeal previously supported a constraint-based schema format. This has been removed in favor of the field-based format:
-
-**Old Format (No Longer Supported):**
-```json
-{
-  "constraints": [
-    {
-      "type": "maximum_value",
-      "column": "age",
-      "max_value": 120
-    }
-  ]
-}
-```
-
-**Current Format:**
-```json
-{
-  "fields": {
-    "age": {
-      "type": "Int64",
-      "constraints": [
-        {"type": "maximum_value", "max_value": 120}
-      ]
-    }
-  }
-}
-```
+- **[Getting Started](getting-started.md)**: Installation and quick start guide
+- **[Constraints Reference](constraints/index.md)**: Detailed documentation for all 12 constraints
+- **[API Reference](api-reference.md)**: Complete programmatic API documentation
+- **[Examples](../examples/)**: Working code examples
 
 ## Contributing
 
@@ -292,8 +277,4 @@ Contributions are welcome! The codebase follows these principles:
 - Clear, informative error messages
 - Well-documented public API
 
-## Additional Resources
-
-- **README.md**: Quick start guide and API reference
-- **examples/**: Working examples with different data types
-- **tests/**: Comprehensive test suite demonstrating all features
+See the repository's contribution guidelines for more information.
